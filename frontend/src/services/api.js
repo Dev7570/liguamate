@@ -2,8 +2,7 @@
  * LinguaMate AI — API Service
  * Handles all backend communication including SSE streaming & audio transcription
  */
-
-const API_BASE = 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 class ApiService {
   constructor() {
