@@ -1,0 +1,1 @@
+"""LinguaMate AI"""

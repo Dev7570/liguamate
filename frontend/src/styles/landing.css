@@ -1,0 +1,218 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Landing Page — 3D Hero Interface
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.landing-page {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg-primary);
+  overflow: hidden;
+}
+
+/* ── 3D Canvas Container ─────────────────────────────────────────────────── */
+.landing-canvas-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* ── UI Overlay ──────────────────────────────────────────────────────────── */
+.landing-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none; /* Let clicks pass through to 3D where empty */
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.landing-header {
+  padding: 2rem 4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.landing-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+
+.landing-logo-icon {
+  font-size: 2rem;
+}
+
+.landing-logo-text {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+.landing-nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.landing-nav .btn {
+  padding: 0.75rem 1.5rem;
+  pointer-events: auto;
+}
+
+/* ── Hero Content ────────────────────────────────────────────────────────── */
+.landing-hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0 10%;
+  max-width: 1200px;
+  pointer-events: auto;
+}
+
+.landing-badge {
+  display: inline-block;
+  background: rgba(124, 58, 237, 0.15);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  color: var(--accent-primary-light);
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(8px);
+}
+
+.landing-title {
+  font-size: 4.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  max-width: 700px;
+}
+
+.landing-title span {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--accent-primary-light), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.landing-subtitle {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  max-width: 500px;
+  line-height: 1.6;
+  margin-bottom: 2.5rem;
+}
+
+.landing-cta-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.landing-cta-group .btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  pointer-events: auto;
+}
+
+.landing-secondary-btn {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-medium);
+  color: var(--text-primary);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-base);
+  pointer-events: auto;
+}
+
+.landing-secondary-btn:hover {
+  background: var(--bg-glass-hover);
+  transform: translateY(-2px);
+}
+
+/* ── Interactive Hint ────────────────────────────────────────────────────── */
+.landing-interactive-hint {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  opacity: 0.7;
+  animation: pulseHint 2s infinite;
+}
+
+.hint-mouse {
+  width: 24px;
+  height: 36px;
+  border: 2px solid var(--text-secondary);
+  border-radius: 12px;
+  position: relative;
+}
+
+.hint-wheel {
+  width: 4px;
+  height: 8px;
+  background: var(--text-secondary);
+  border-radius: 2px;
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: scrollWheel 2s infinite;
+}
+
+@keyframes scrollWheel {
+  0% { transform: translate(-50%, 0); opacity: 1; }
+  100% { transform: translate(-50%, 10px); opacity: 0; }
+}
+
+@keyframes pulseHint {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .landing-header {
+    padding: 1.5rem;
+  }
+  .landing-hero {
+    padding: 0 1.5rem;
+    align-items: center;
+    text-align: center;
+  }
+  .landing-title {
+    font-size: 3rem;
+  }
+  .landing-cta-group {
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+  }
+}

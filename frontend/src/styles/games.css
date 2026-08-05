@@ -1,0 +1,143 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Games CSS — Styles for Word Match and Fill-in-the-Blanks
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Word Match Game ─────────────────────────────────────────────────────── */
+.match-game-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.match-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.match-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  text-align: center;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.match-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-primary);
+}
+
+.match-card.selected {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: scale(1.05);
+}
+
+.match-card.matched {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: var(--color-success);
+  color: var(--color-success);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.match-stats {
+  display: flex;
+  justify-content: space-between;
+  background: var(--color-surface-hover);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+}
+
+/* ── Fill in the Blanks Game ─────────────────────────────────────────────── */
+.blanks-game-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.blanks-sentence-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  padding: 2.5rem 2rem;
+  text-align: center;
+}
+
+.blanks-sentence {
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: var(--color-text);
+  margin-bottom: 2rem;
+}
+
+.blank-slot {
+  display: inline-block;
+  min-width: 100px;
+  border-bottom: 2px solid var(--color-primary);
+  margin: 0 0.5rem;
+  padding: 0 0.5rem;
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.blanks-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.blank-option-btn {
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.blank-option-btn:hover {
+  background: var(--color-surface);
+  border-color: var(--color-primary);
+}
+
+.blank-option-btn.selected {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.blank-option-btn.correct {
+  background: var(--color-success);
+  color: white;
+  border-color: var(--color-success);
+}
+
+.blank-option-btn.incorrect {
+  background: var(--color-danger);
+  color: white;
+  border-color: var(--color-danger);
+}
+
+.blanks-controls {
+  display: flex;
+  justify-content: flex-end;
+}
