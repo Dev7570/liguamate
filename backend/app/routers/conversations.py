@@ -13,6 +13,7 @@ from app.services.chat_service import (
     process_message,
     process_message_stream,
     end_conversation,
+    delete_conversation,
     get_conversation_messages,
     get_user_conversations,
 )
@@ -169,6 +170,19 @@ async def end_conversation_endpoint(
         ended_at=str(conversation.ended_at),
         summary=conversation.summary,
     )
+
+
+@router.delete("/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_conversation_endpoint(
+    conversation_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete a conversation."""
+    success = await delete_conversation(db, conversation_id, current_user.id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Conversation not found or unauthorized")
+    return None
 
 
 @router.get("/{conversation_id}/messages", response_model=list[MessageResponse])

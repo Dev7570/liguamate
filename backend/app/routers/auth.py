@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from app.database import get_db
 from app.models.user import User
-from app.schemas.auth import SignupRequest, LoginRequest, TokenResponse, UserProfile
+from app.schemas.auth import SignupRequest, LoginRequest, TokenResponse, UserProfile, UserProfileUpdate
 from app.utils.auth import hash_password, verify_password, create_access_token, get_current_user
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -68,6 +68,30 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
 @router.get("/me", response_model=UserProfile)
 async def get_profile(current_user: User = Depends(get_current_user)):
     """Get the current user's profile."""
+    return UserProfile(
+        id=str(current_user.id),
+        name=current_user.name,
+        email=current_user.email,
+        english_level=current_user.english_level,
+        goal=current_user.goal,
+        avatar_emoji=current_user.avatar_emoji,
+        created_at=str(current_user.created_at),
+    )
+
+@router.put("/me", response_model=UserProfile)
+async def update_profile(
+    request: UserProfileUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update the current user's profile settings."""
+    if request.english_level is not None:
+        current_user.english_level = request.english_level
+    if request.goal is not None:
+        current_user.goal = request.goal
+        
+    await db.commit()
+    
     return UserProfile(
         id=str(current_user.id),
         name=current_user.name,

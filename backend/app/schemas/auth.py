@@ -34,3 +34,7 @@ class UserProfile(BaseModel):
 
     class Config:
         from_attributes = True
+
+class UserProfileUpdate(BaseModel):
+    english_level: str | None = Field(default=None, pattern="^(beginner|intermediate|advanced)$")
+    goal: str | None = None

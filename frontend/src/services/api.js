@@ -77,11 +77,24 @@ class ApiService {
     return this.request('/auth/me');
   }
 
+  async updateProfile(data) {
+    return this.request('/auth/me', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
   // ── Conversations ─────────────────────────────────────────
   async startConversation(channel = 'text') {
     return this.request('/conversations', {
       method: 'POST',
       body: JSON.stringify({ channel }),
+    });
+  }
+
+  async deleteConversation(conversationId) {
+    return this.request(`/conversations/${conversationId}`, {
+      method: 'DELETE',
     });
   }
 

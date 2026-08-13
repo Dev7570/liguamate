@@ -23,7 +23,7 @@ const SUGGESTIONS = [
 ];
 
 export default function ChatPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -34,6 +34,9 @@ export default function ChatPage() {
   const [conversationId, setConversationId] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsForm, setSettingsForm] = useState({ level: '', goal: '' });
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   // Streaming state
   const [streamingContent, setStreamingContent] = useState('');
@@ -71,7 +74,10 @@ export default function ChatPage() {
     if (location.state?.initialPrompt) {
       setInput(location.state.initialPrompt);
     }
-  }, [location.state]);
+    if (user) {
+      setSettingsForm({ level: user.english_level || 'beginner', goal: user.goal || 'casual_fluency' });
+    }
+  }, [location.state, user]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -181,6 +187,41 @@ export default function ChatPage() {
       setSidebarOpen(false);
     } catch (err) {
       console.error('Failed to load conversation:', err);
+    }
+  };
+
+  const handleDeleteConversation = async (e, convId) => {
+    e.stopPropagation(); // Prevent loading the conversation
+    if (!window.confirm('Are you sure you want to delete this conversation?')) return;
+    
+    try {
+      await api.deleteConversation(convId);
+      setConversations(prev => prev.filter(c => c.id !== convId));
+      if (conversationId === convId) {
+        setConversationId(null);
+        setMessages([]);
+      }
+    } catch (err) {
+      console.error('Failed to delete conversation:', err);
+      alert('Failed to delete conversation.');
+    }
+  };
+
+  const handleSaveSettings = async (e) => {
+    e.preventDefault();
+    setIsSavingSettings(true);
+    try {
+      const profile = await api.updateProfile({ 
+        english_level: settingsForm.level, 
+        goal: settingsForm.goal 
+      });
+      updateUser({ english_level: settingsForm.level, goal: settingsForm.goal });
+      setIsSettingsOpen(false);
+    } catch (err) {
+      console.error('Failed to update settings:', err);
+      alert('Failed to save settings.');
+    } finally {
+      setIsSavingSettings(false);
     }
   };
 
@@ -400,8 +441,18 @@ export default function ChatPage() {
               key={conv.id}
               className={`chat-history-item ${conv.id === conversationId ? 'active' : ''}`}
               onClick={() => loadConversation(conv.id)}
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
             >
-              💬 {conv.summary || `Chat · ${conv.message_count} messages`}
+              <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                💬 {conv.summary || `Chat · ${conv.message_count} messages`}
+              </span>
+              <button 
+                onClick={(e) => handleDeleteConversation(e, conv.id)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', opacity: 0.6, fontSize: '14px' }}
+                title="Delete conversation"
+              >
+                🗑️
+              </button>
             </div>
           ))}
           {conversations.length === 0 && (
@@ -412,12 +463,13 @@ export default function ChatPage() {
         </div>
 
         <div className="chat-sidebar-footer">
-          <div className="user-profile-mini">
+          <div className="user-profile-mini" style={{ cursor: 'pointer', border: '1px solid transparent' }} onClick={() => setIsSettingsOpen(true)} title="Edit Profile">
             <div className="user-avatar">{user?.avatar_emoji || '😊'}</div>
             <div className="user-info">
               <div className="user-name">{user?.name || 'User'}</div>
               <div className="user-level">{user?.english_level || 'beginner'}</div>
             </div>
+            <div style={{ marginLeft: 'auto', opacity: 0.5 }}>⚙️</div>
           </div>
           <div style={{ display: 'flex', gap: '4px', marginTop: '8px', flexWrap: 'wrap' }}>
             <button
@@ -451,6 +503,61 @@ export default function ChatPage() {
           </button>
         </div>
       </aside>
+
+      {/* Settings Modal */}
+      {isSettingsOpen && (
+        <div className="settings-modal-overlay" style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+          background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', 
+          justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)'
+        }}>
+          <div className="settings-modal auth-card" style={{ width: '90%', maxWidth: '400px', animation: 'none' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Edit Profile</h2>
+              <button onClick={() => setIsSettingsOpen(false)} className="btn btn-ghost" style={{ padding: '4px 8px' }}>✕</button>
+            </div>
+            
+            <form onSubmit={handleSaveSettings}>
+              <div className="input-group">
+                <label className="input-label">English Level</label>
+                <select 
+                  className="input" 
+                  value={settingsForm.level} 
+                  onChange={e => setSettingsForm({...settingsForm, level: e.target.value})}
+                  style={{ width: '100%' }}
+                >
+                  <option value="beginner">🌱 Beginner</option>
+                  <option value="intermediate">🌿 Intermediate</option>
+                  <option value="advanced">🌳 Advanced</option>
+                </select>
+              </div>
+
+              <div className="input-group" style={{ marginTop: '16px' }}>
+                <label className="input-label">Your Goal</label>
+                <select 
+                  className="input" 
+                  value={settingsForm.goal} 
+                  onChange={e => setSettingsForm({...settingsForm, goal: e.target.value})}
+                  style={{ width: '100%' }}
+                >
+                  <option value="casual_fluency">🗣️ Daily conversation</option>
+                  <option value="interview_prep">💼 Interview preparation</option>
+                  <option value="exam_prep">📝 Exam preparation</option>
+                  <option value="business">🏢 Business English</option>
+                  <option value="academic">🎓 Academic English</option>
+                </select>
+              </div>
+
+              <div style={{ marginTop: '24px', display: 'flex', gap: '10px' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setIsSettingsOpen(false)} style={{ flex: 1 }}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={isSavingSettings} style={{ flex: 1 }}>
+                  {isSavingSettings ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* ── Main Chat ────────────────────────────────────────── */}
       <main className={`chat-main ${location.state?.scenarioTitle ? 'has-3d-scene' : ''}`}>
@@ -709,10 +816,17 @@ export default function ChatPage() {
               />
             </div>
             <button
-              className="send-btn"
-              onClick={() => sendMessage()}
-              disabled={!input.trim() || isLoading || isStreaming}
+              className={`send-btn ${isRecording ? 'recording-active' : ''}`}
+              onClick={() => {
+                if (isRecording) {
+                  stopRecording();
+                } else {
+                  sendMessage();
+                }
+              }}
+              disabled={(!input.trim() && !isRecording) || isLoading || isStreaming || isTranscribing}
               id="send-message-btn"
+              title={isRecording ? 'Stop and send' : 'Send message'}
             >
               ➤
             </button>

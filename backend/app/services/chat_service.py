@@ -201,6 +201,27 @@ async def end_conversation(
     return conversation
 
 
+async def delete_conversation(
+    db: AsyncSession,
+    conversation_id: uuid.UUID,
+    user_id: uuid.UUID,
+) -> bool:
+    """Delete a conversation and all its messages."""
+    result = await db.execute(
+        select(Conversation).where(
+            Conversation.id == conversation_id,
+            Conversation.user_id == user_id,
+        )
+    )
+    conversation = result.scalar_one_or_none()
+    if not conversation:
+        return False
+        
+    await db.delete(conversation)
+    await db.commit()
+    return True
+
+
 async def get_conversation_messages(
     db: AsyncSession,
     conversation_id: uuid.UUID,
