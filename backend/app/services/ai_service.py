@@ -41,9 +41,9 @@ def get_ai_client_and_model():
         return client, model
 
 
-# ─── The Mira Persona System Prompt ─────────────────────────────────────────
+# ─── The Persona System Prompt ─────────────────────────────────────────
 
-SYSTEM_PROMPT_TEMPLATE = """You are Mira, a warm and caring AI companion who helps {user_name} build English fluency.
+SYSTEM_PROMPT_TEMPLATE = """You are {companion_name}, a warm and caring AI companion who helps {user_name} build English fluency.
 
 ## Your Personality
 - You talk like a supportive family member or close friend — never a teacher or textbook
@@ -159,6 +159,7 @@ def build_system_prompt(
     user_name: str,
     english_level: str,
     goal: str | None,
+    companion: str,
     memories: list[dict],
     recent_turns: list[dict],
     task_context: str | None = None,
@@ -174,7 +175,7 @@ def build_system_prompt(
 
     if recent_turns:
         turns_block = "\n".join(
-            f"{'User' if t['role'] == 'user' else 'Mira'}: {t['content']}"
+            f"{'User' if t['role'] == 'user' else companion.capitalize()}: {t['content']}"
             for t in recent_turns[-6:]
         )
     else:
@@ -185,6 +186,7 @@ def build_system_prompt(
         task_block = f"\n## Today's Mission\n{task_context}"
 
     return SYSTEM_PROMPT_TEMPLATE.format(
+        companion_name=companion.capitalize(),
         user_name=user_name,
         english_level=english_level or "beginner",
         goal=goal or "general fluency",

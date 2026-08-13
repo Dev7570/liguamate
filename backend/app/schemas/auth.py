@@ -9,6 +9,7 @@ class SignupRequest(BaseModel):
     password: str = Field(..., min_length=6)
     english_level: str = Field(default="beginner", pattern="^(beginner|intermediate|advanced)$")
     goal: str | None = None
+    companion: str = Field(default="mira", pattern="^(mira|leo)$")
 
 
 class LoginRequest(BaseModel):
@@ -29,6 +30,7 @@ class UserProfile(BaseModel):
     email: str
     english_level: str
     goal: str | None
+    companion: str
     avatar_emoji: str
     created_at: str
 
@@ -38,3 +40,4 @@ class UserProfile(BaseModel):
 class UserProfileUpdate(BaseModel):
     english_level: str | None = Field(default=None, pattern="^(beginner|intermediate|advanced)$")
     goal: str | None = None
+    companion: str | None = Field(default=None, pattern="^(mira|leo)$")

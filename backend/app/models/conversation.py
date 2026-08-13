@@ -28,7 +28,7 @@ class Conversation(Base):
     # Relationships
     user = relationship("User", back_populates="conversations")
     messages = relationship(
-        "Message", back_populates="conversation", order_by="Message.created_at"
+        "Message", back_populates="conversation", order_by="Message.created_at", cascade="all, delete-orphan"
     )
 
     __table_args__ = (

@@ -13,8 +13,8 @@ import RoleplayScene from '../components/chat/RoleplayScene';
 import '../styles/chat.css';
 
 // Suggested conversation starters
-const SUGGESTIONS = [
-  "Hi Mira! I want to practice English today 😊",
+const getSuggestions = (companion) => [
+  `Hi ${companion}! I want to practice English today 😊`,
   "Can you help me prepare for a job interview?",
   "Let's talk about my favorite movie!",
   "I made some mistakes yesterday. Can we review?",
@@ -35,8 +35,12 @@ export default function ChatPage() {
   const [conversations, setConversations] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [settingsForm, setSettingsForm] = useState({ level: '', goal: '' });
+  const [settingsForm, setSettingsForm] = useState({ level: '', goal: '', companion: '' });
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  // Companion computed values
+  const companionName = user?.companion === 'leo' ? 'Leo' : 'Mira';
+  const companionEmoji = user?.companion === 'leo' ? '👦' : '🤗';
 
   // Streaming state
   const [streamingContent, setStreamingContent] = useState('');
@@ -75,7 +79,11 @@ export default function ChatPage() {
       setInput(location.state.initialPrompt);
     }
     if (user) {
-      setSettingsForm({ level: user.english_level || 'beginner', goal: user.goal || 'casual_fluency' });
+      setSettingsForm({ 
+        level: user.english_level || 'beginner', 
+        goal: user.goal || 'casual_fluency',
+        companion: user.companion || 'mira' 
+      });
     }
   }, [location.state, user]);
 
@@ -111,11 +119,15 @@ export default function ChatPage() {
 
     // Try to pick a natural female English voice
     const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find(v =>
-      v.lang.startsWith('en') && v.name.toLowerCase().includes('female')
-    ) || voices.find(v =>
-      v.lang.startsWith('en') && (v.name.includes('Zira') || v.name.includes('Samantha') || v.name.includes('Google US English'))
-    ) || voices.find(v => v.lang.startsWith('en'));
+    let preferred;
+    
+    if (user?.companion === 'leo') {
+      preferred = voices.find(v => v.lang.startsWith('en') && (v.name.toLowerCase().includes('male') || v.name.includes('David') || v.name.includes('Daniel'))) || voices.find(v => v.lang.startsWith('en'));
+    } else {
+      preferred = voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('female')) || 
+                  voices.find(v => v.lang.startsWith('en') && (v.name.includes('Zira') || v.name.includes('Samantha') || v.name.includes('Google US English'))) || 
+                  voices.find(v => v.lang.startsWith('en'));
+    }
 
     if (preferred) utterance.voice = preferred;
 
@@ -133,7 +145,7 @@ export default function ChatPage() {
     };
 
     window.speechSynthesis.speak(utterance);
-  }, []);
+  }, [user]);
 
   const stopSpeaking = useCallback(() => {
     window.speechSynthesis?.cancel();
@@ -213,9 +225,14 @@ export default function ChatPage() {
     try {
       const profile = await api.updateProfile({ 
         english_level: settingsForm.level, 
-        goal: settingsForm.goal 
+        goal: settingsForm.goal,
+        companion: settingsForm.companion
       });
-      updateUser({ english_level: settingsForm.level, goal: settingsForm.goal });
+      updateUser({ 
+        english_level: settingsForm.level, 
+        goal: settingsForm.goal,
+        companion: settingsForm.companion 
+      });
       setIsSettingsOpen(false);
     } catch (err) {
       console.error('Failed to update settings:', err);
@@ -457,7 +474,7 @@ export default function ChatPage() {
           ))}
           {conversations.length === 0 && (
             <p style={{ padding: '16px', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>
-              No conversations yet. Start chatting with Mira!
+              No conversations yet. Start chatting with {companionName}!
             </p>
           )}
         </div>
@@ -548,6 +565,28 @@ export default function ChatPage() {
                 </select>
               </div>
 
+              <div className="input-group" style={{ marginTop: '16px' }}>
+                <label className="input-label">Your Companion</label>
+                <div className="level-selector" style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    className={`level-option ${settingsForm.companion === 'mira' ? 'active' : ''}`}
+                    onClick={() => setSettingsForm({...settingsForm, companion: 'mira'})}
+                    style={{ flex: 1, padding: '8px' }}
+                  >
+                    🤗 Mira (Female)
+                  </button>
+                  <button
+                    type="button"
+                    className={`level-option ${settingsForm.companion === 'leo' ? 'active' : ''}`}
+                    onClick={() => setSettingsForm({...settingsForm, companion: 'leo'})}
+                    style={{ flex: 1, padding: '8px' }}
+                  >
+                    👦 Leo (Male)
+                  </button>
+                </div>
+              </div>
+
               <div style={{ marginTop: '24px', display: 'flex', gap: '10px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setIsSettingsOpen(false)} style={{ flex: 1 }}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={isSavingSettings} style={{ flex: 1 }}>
@@ -582,9 +621,9 @@ export default function ChatPage() {
               ☰
             </button>
             <div className="mira-status">
-              <div className="mira-avatar">🤗</div>
+              <div className="mira-avatar">{companionEmoji}</div>
               <div className="mira-info">
-                <h3>Mira</h3>
+                <h3>{companionName}</h3>
                 <span className={isStreaming ? 'mira-typing' : ''}>
                   {isStreaming ? '● Typing...' : '● Always here for you'}
                 </span>
@@ -595,7 +634,7 @@ export default function ChatPage() {
             <button
               className={`btn btn-ghost btn-icon tts-toggle ${autoSpeak ? 'active' : ''}`}
               onClick={toggleAutoSpeak}
-              title={autoSpeak ? 'Voice ON — Mira speaks aloud' : 'Voice OFF — Text only'}
+              title={autoSpeak ? `Voice ON — ${companionName} speaks aloud` : 'Voice OFF — Text only'}
               id="tts-toggle-btn"
             >
               {autoSpeak ? '🔊' : '🔇'}
@@ -638,16 +677,16 @@ export default function ChatPage() {
           <div className="chat-messages-inner">
             {messages.length === 0 && !isStreaming ? (
               <div className="chat-welcome">
-                <div className="welcome-icon">🤗</div>
+                <div className="welcome-icon">{companionEmoji}</div>
                 <h2 className="welcome-title">
                   Hey{user?.name ? `, ${user.name}` : ''}!
                 </h2>
                 <p className="welcome-subtitle">
-                  I'm Mira, your English companion. I'm here to chat, help you practice, 
+                  I'm {companionName}, your English companion. I'm here to chat, help you practice, 
                   and make you feel confident speaking English. No judgement — just friendship! 💜
                 </p>
                 <div className="welcome-suggestions">
-                  {SUGGESTIONS.map((s, i) => (
+                  {getSuggestions(companionName).map((s, i) => (
                     <button
                       key={i}
                       className="suggestion-chip"
@@ -663,7 +702,7 @@ export default function ChatPage() {
                 {messages.map((msg) => (
                   <div key={msg.id} className={`message message-${msg.role}`}>
                     <div className="message-avatar">
-                      {msg.role === 'user' ? (user?.avatar_emoji || '😊') : '🤗'}
+                      {msg.role === 'user' ? (user?.avatar_emoji || '😊') : companionEmoji}
                     </div>
                     <div>
                       <div className="message-content">
@@ -701,7 +740,7 @@ export default function ChatPage() {
                           <button
                             className={`speak-btn ${speakingMsgId === msg.id ? 'speaking' : ''}`}
                             onClick={() => speakingMsgId === msg.id ? stopSpeaking() : speakText(msg.content, msg.id)}
-                            title={speakingMsgId === msg.id ? 'Stop speaking' : 'Listen to Mira'}
+                            title={speakingMsgId === msg.id ? 'Stop speaking' : `Listen to ${companionName}`}
                           >
                             {speakingMsgId === msg.id ? '⏹️' : '🔊'}
                           </button>
@@ -724,7 +763,7 @@ export default function ChatPage() {
                 {isStreaming && streamingContent && (
                   <div className="message message-assistant">
                     <div className="message-avatar" style={{ background: 'var(--gradient-primary)' }}>
-                      🤗
+                      {companionEmoji}
                     </div>
                     <div>
                       <div className="message-content streaming-content">
@@ -741,7 +780,7 @@ export default function ChatPage() {
             {isLoading && !streamingContent && (
               <div className="typing-indicator">
                 <div className="message-avatar" style={{ background: 'var(--gradient-primary)' }}>
-                  🤗
+                  {companionEmoji}
                 </div>
                 <div className="typing-dots">
                   <div className="typing-dot" />

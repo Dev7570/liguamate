@@ -20,6 +20,7 @@ class User(Base):
         String(20), default="beginner"
     )
     goal: Mapped[str | None] = mapped_column(Text, nullable=True)
+    companion: Mapped[str] = mapped_column(String(20), default="mira")
     avatar_emoji: Mapped[str] = mapped_column(String(10), default="😊")
     xp: Mapped[int] = mapped_column(default=0)
     parent_id: Mapped[str | None] = mapped_column(

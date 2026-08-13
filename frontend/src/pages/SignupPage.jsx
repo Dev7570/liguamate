@@ -24,6 +24,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [level, setLevel] = useState('beginner');
   const [goal, setGoal] = useState('casual_fluency');
+  const [companion, setCompanion] = useState('mira');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { signup } = useAuth();
@@ -39,7 +40,7 @@ export default function SignupPage() {
     setError('');
     setLoading(true);
     try {
-      await signup({ name, email, password, english_level: level, goal });
+      await signup({ name, email, password, english_level: level, goal, companion });
       navigate('/chat');
     } catch (err) {
       setError(err.message || 'Failed to create account');
@@ -65,8 +66,8 @@ export default function SignupPage() {
             </h1>
             <p className="auth-subtitle">
               {step === 1
-                ? 'Create your account and meet Mira'
-                : 'So Mira can personalize your experience'}
+                ? 'Create your account to get started'
+                : 'So your AI companion can personalize your experience'}
             </p>
           </div>
 
@@ -81,7 +82,7 @@ export default function SignupPage() {
                     id="signup-name"
                     type="text"
                     className="input"
-                    placeholder="What should Mira call you?"
+                    placeholder="What should we call you?"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
@@ -139,6 +140,28 @@ export default function SignupPage() {
                 </div>
 
                 <div className="input-group">
+                  <label className="input-label">Your Companion</label>
+                  <div className="level-selector" style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="button"
+                      className={`level-option ${companion === 'mira' ? 'active' : ''}`}
+                      onClick={() => setCompanion('mira')}
+                      style={{ flex: 1 }}
+                    >
+                      🤗 Mira (Female)
+                    </button>
+                    <button
+                      type="button"
+                      className={`level-option ${companion === 'leo' ? 'active' : ''}`}
+                      onClick={() => setCompanion('leo')}
+                      style={{ flex: 1 }}
+                    >
+                      👦 Leo (Male)
+                    </button>
+                  </div>
+                </div>
+
+                <div className="input-group">
                   <label className="input-label">Your Goal</label>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     {GOALS.map((g) => (
@@ -169,7 +192,7 @@ export default function SignupPage() {
                     style={{ flex: 1 }}
                     disabled={loading}
                   >
-                    {loading ? '✨ Creating...' : '🎉 Meet Mira'}
+                    {loading ? '✨ Creating...' : '🎉 Get Started'}
                   </button>
                 </div>
               </>
