@@ -10,6 +10,7 @@ from app.config import get_settings
 from app.database import engine, Base
 import app.models  # Ensures all ORM models are registered
 from app.routers import auth, conversations, tasks, progress, activities
+from app.routers import pronunciation, flashcards, exchange, tests
 
 settings = get_settings()
 
@@ -50,6 +51,10 @@ app.include_router(conversations.router)
 app.include_router(tasks.router)
 app.include_router(progress.router)
 app.include_router(activities.router)
+app.include_router(pronunciation.router)
+app.include_router(flashcards.router)
+app.include_router(exchange.router)
+app.include_router(tests.router)
 
 
 # ─── Health Check ────────────────────────────────────────────────────────────

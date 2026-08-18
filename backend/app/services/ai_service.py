@@ -43,7 +43,7 @@ def get_ai_client_and_model():
 
 # ─── The Persona System Prompt ─────────────────────────────────────────
 
-SYSTEM_PROMPT_TEMPLATE = """You are {companion_name}, a warm and caring AI companion who helps {user_name} build English fluency.
+SYSTEM_PROMPT_TEMPLATE = """You are {companion_name}, a warm and caring AI companion who helps {user_name} build {target_language} fluency.
 
 ## Your Personality
 - You talk like a supportive family member or close friend — never a teacher or textbook
@@ -56,24 +56,22 @@ SYSTEM_PROMPT_TEMPLATE = """You are {companion_name}, a warm and caring AI compa
 {memories_block}
 
 ## {user_name}'s Profile
-- English Level: {english_level}
+- Target Language: {target_language}
+- Level: {english_level}
 - Goal: {goal}
 {task_context}
 
 ## Recent Conversation
 {recent_turns}
 
-## How You Correct English
+## How You Correct {target_language}
 NEVER say "Wrong grammar" or "Incorrect." Instead:
 - Model the correct form naturally inside your reply
-- Example: If they say "I goed to market", you reply:
-  "Oh nice! So you went to the market today? What did you buy?"
 - Only point out corrections explicitly if they're repeated mistakes, and do it warmly:
-  "By the way, a more natural way to say that is: 'I have been studying for two hours.' You're getting really close!"
+  "By the way, a more natural way to say that in {target_language} is: '...' You're getting really close!"
 
 ## Vocabulary Enrichment
-- If you notice {user_name} uses a word too often (like "good"), suggest richer alternatives naturally:
-  "That sounds great! Or you could even say 'fantastic' or 'outstanding' — they really add punch!"
+- If you notice {user_name} uses a word too often, suggest richer alternatives naturally in {target_language}.
 
 ## Confidence Support
 - If {user_name} seems hesitant, nervous, or apologizes for mistakes:
@@ -86,7 +84,8 @@ NEVER say "Wrong grammar" or "Incorrect." Instead:
 2. Never lecture. Never give unsolicited grammar lessons
 3. Ask follow-up questions to keep the conversation flowing
 4. Match {user_name}'s energy — if they're excited, be excited. If they're tired, be gentle.
-5. If their level is beginner, use simpler English. If advanced, use richer vocabulary."""
+5. If their level is beginner, use simpler {target_language}. If advanced, use richer vocabulary.
+6. You are teaching {target_language}. Use {target_language} in your replies where appropriate for the user's level."""
 
 # ─── Tool Definition for Structured Signal Extraction ────────────────────────
 
@@ -163,6 +162,7 @@ def build_system_prompt(
     memories: list[dict],
     recent_turns: list[dict],
     task_context: str | None = None,
+    target_language: str = "English",
 ) -> str:
     """Build the complete system prompt with injected context."""
 
@@ -193,6 +193,7 @@ def build_system_prompt(
         memories_block=memories_block,
         recent_turns=turns_block,
         task_context=task_block,
+        target_language=target_language,
     )
 
 
@@ -248,6 +249,7 @@ async def generate_reply(
 async def generate_reply_stream(
     system_prompt: str,
     user_message: str,
+    target_language: str = "English",
 ):
     """
     Stream LLM reply tokens as they arrive (async generator).
@@ -292,8 +294,8 @@ async def generate_reply_stream(
             signals_response = await client.chat.completions.create(
                 model=model,
                 messages=[
-                    {"role": "system", "content": "You are an English learning analysis tool. Analyze the user's message for grammar corrections, vocabulary, mood, and memorable facts. Call the log_learning_signals tool with your analysis."},
-                    {"role": "user", "content": f"User said: \"{user_message}\"\n\nMira replied: \"{full_reply}\""},
+                    {"role": "system", "content": f"You are a {target_language} learning analysis tool. Analyze the user's message for grammar corrections, vocabulary, mood, and memorable facts. Call the log_learning_signals tool with your analysis."},
+                    {"role": "user", "content": f"User said: \"{user_message}\"\n\nCompanion replied: \"{full_reply}\""},
                 ],
                 tools=[LEARNING_SIGNALS_TOOL],
                 tool_choice={"type": "function", "function": {"name": "log_learning_signals"}},

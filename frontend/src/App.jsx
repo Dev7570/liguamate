@@ -12,6 +12,10 @@ import DashboardPage from './pages/DashboardPage';
 import TasksPage from './pages/TasksPage';
 import ActivitiesPage from './pages/ActivitiesPage';
 import LandingPage from './pages/LandingPage';
+import PronunciationPage from './pages/PronunciationPage';
+import FlashcardsPage from './pages/FlashcardsPage';
+import ExchangePage from './pages/ExchangePage';
+import TestsPage from './pages/TestsPage';
 import './index.css';
 
 function ProtectedRoute({ children }) {
@@ -99,14 +103,11 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/activities"
-        element={
-          <ProtectedRoute>
-            <ActivitiesPage />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/activities" element={<ProtectedRoute><ActivitiesPage /></ProtectedRoute>} />
+      <Route path="/pronunciation" element={<ProtectedRoute><PronunciationPage /></ProtectedRoute>} />
+      <Route path="/flashcards" element={<ProtectedRoute><FlashcardsPage /></ProtectedRoute>} />
+      <Route path="/exchange" element={<ProtectedRoute><ExchangePage /></ProtectedRoute>} />
+      <Route path="/tests" element={<ProtectedRoute><TestsPage /></ProtectedRoute>} />
 
       {/* Default */}
       <Route path="*" element={<Navigate to="/chat" replace />} />

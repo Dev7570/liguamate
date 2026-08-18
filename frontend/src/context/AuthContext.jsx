@@ -27,6 +27,8 @@ export function AuthProvider({ children }) {
             english_level: profile.english_level,
             goal: profile.goal,
             avatar_emoji: profile.avatar_emoji,
+            target_language: profile.target_language || 'English',
+            companion: profile.companion,
           };
           setUser(userData);
           localStorage.setItem('linguamate_user', JSON.stringify(userData));

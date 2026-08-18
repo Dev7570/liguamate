@@ -13,13 +13,13 @@ import RoleplayScene from '../components/chat/RoleplayScene';
 import '../styles/chat.css';
 
 // Suggested conversation starters
-const getSuggestions = (companion) => [
-  `Hi ${companion}! I want to practice English today 😊`,
-  "Can you help me prepare for a job interview?",
+const getSuggestions = (companion, language) => [
+  `Hi ${companion}! I want to practice ${language} today 😊`,
+  `Can you help me learn ${language} for a job interview?`,
   "Let's talk about my favorite movie!",
-  "I made some mistakes yesterday. Can we review?",
+  "I made some mistakes. Can we review them?",
   "Tell me today's speaking mission!",
-  "I'm feeling nervous about my presentation...",
+  `I'm feeling nervous about speaking ${language}...`,
 ];
 
 export default function ChatPage() {
@@ -35,12 +35,13 @@ export default function ChatPage() {
   const [conversations, setConversations] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [settingsForm, setSettingsForm] = useState({ level: '', goal: '', companion: '' });
+  const [settingsForm, setSettingsForm] = useState({ level: '', goal: '', companion: '', targetLanguage: '' });
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
-  // Companion computed values
+  // Companion + language computed values
   const companionName = user?.companion === 'leo' ? 'Leo' : 'Mira';
   const companionEmoji = user?.companion === 'leo' ? '👦' : '🤗';
+  const targetLanguage = user?.target_language || 'English';
 
   // Streaming state
   const [streamingContent, setStreamingContent] = useState('');
@@ -82,7 +83,8 @@ export default function ChatPage() {
       setSettingsForm({ 
         level: user.english_level || 'beginner', 
         goal: user.goal || 'casual_fluency',
-        companion: user.companion || 'mira' 
+        companion: user.companion || 'mira',
+        targetLanguage: user.target_language || 'English',
       });
     }
   }, [location.state, user]);
@@ -223,15 +225,17 @@ export default function ChatPage() {
     e.preventDefault();
     setIsSavingSettings(true);
     try {
-      const profile = await api.updateProfile({ 
+      await api.updateProfile({ 
         english_level: settingsForm.level, 
         goal: settingsForm.goal,
-        companion: settingsForm.companion
+        companion: settingsForm.companion,
+        target_language: settingsForm.targetLanguage,
       });
       updateUser({ 
         english_level: settingsForm.level, 
         goal: settingsForm.goal,
-        companion: settingsForm.companion 
+        companion: settingsForm.companion,
+        target_language: settingsForm.targetLanguage,
       });
       setIsSettingsOpen(false);
     } catch (err) {
@@ -484,7 +488,7 @@ export default function ChatPage() {
             <div className="user-avatar">{user?.avatar_emoji || '😊'}</div>
             <div className="user-info">
               <div className="user-name">{user?.name || 'User'}</div>
-              <div className="user-level">{user?.english_level || 'beginner'}</div>
+              <div className="user-level">{targetLanguage} · {user?.english_level || 'beginner'}</div>
             </div>
             <div style={{ marginLeft: 'auto', opacity: 0.5 }}>⚙️</div>
           </div>
@@ -509,6 +513,22 @@ export default function ChatPage() {
               onClick={() => navigate('/activities')}
             >
               🎮 Activities
+            </button>
+          </div>
+          <div style={{ display: 'flex', gap: '4px', marginTop: '4px', flexWrap: 'wrap' }}>
+            <button className="btn btn-ghost" style={{ flex: 1, fontSize: '0.8rem' }} onClick={() => navigate('/pronunciation')}>
+              🎙️ Pronunciation
+            </button>
+            <button className="btn btn-ghost" style={{ flex: 1, fontSize: '0.8rem' }} onClick={() => navigate('/flashcards')}>
+              🗂️ Flashcards
+            </button>
+          </div>
+          <div style={{ display: 'flex', gap: '4px', marginTop: '4px', flexWrap: 'wrap' }}>
+            <button className="btn btn-ghost" style={{ flex: 1, fontSize: '0.8rem' }} onClick={() => navigate('/exchange')}>
+              🌐 Exchange
+            </button>
+            <button className="btn btn-ghost" style={{ flex: 1, fontSize: '0.8rem' }} onClick={() => navigate('/tests')}>
+              📝 Tests
             </button>
           </div>
           <button
@@ -536,7 +556,7 @@ export default function ChatPage() {
             
             <form onSubmit={handleSaveSettings}>
               <div className="input-group">
-                <label className="input-label">English Level</label>
+                <label className="input-label">{settingsForm.targetLanguage || 'Language'} Level</label>
                 <select 
                   className="input" 
                   value={settingsForm.level} 
@@ -546,6 +566,26 @@ export default function ChatPage() {
                   <option value="beginner">🌱 Beginner</option>
                   <option value="intermediate">🌿 Intermediate</option>
                   <option value="advanced">🌳 Advanced</option>
+                </select>
+              </div>
+
+              <div className="input-group" style={{ marginTop: '16px' }}>
+                <label className="input-label">Target Language</label>
+                <select 
+                  className="input" 
+                  value={settingsForm.targetLanguage} 
+                  onChange={e => setSettingsForm({...settingsForm, targetLanguage: e.target.value})}
+                  style={{ width: '100%' }}
+                >
+                  {[
+                    ['English','🇬🇧'],['Spanish','🇪🇸'],['French','🇫🇷'],
+                    ['German','🇩🇪'],['Italian','🇮🇹'],['Japanese','🇯🇵'],
+                    ['Mandarin','🇨🇳'],['Portuguese','🇧🇷'],['Russian','🇷🇺'],
+                    ['Arabic','🇸🇦'],['Hindi','🇮🇳'],['Korean','🇰🇷'],
+                    ['Dutch','🇳🇱'],['Swedish','🇸🇪'],['Turkish','🇹🇷'],
+                  ].map(([lang, flag]) => (
+                    <option key={lang} value={lang}>{flag} {lang}</option>
+                  ))}
                 </select>
               </div>
 
@@ -682,11 +722,11 @@ export default function ChatPage() {
                   Hey{user?.name ? `, ${user.name}` : ''}!
                 </h2>
                 <p className="welcome-subtitle">
-                  I'm {companionName}, your English companion. I'm here to chat, help you practice, 
-                  and make you feel confident speaking English. No judgement — just friendship! 💜
+                  I'm {companionName}, your {targetLanguage} companion. I'm here to chat, help you practice, 
+                  and make you feel confident speaking {targetLanguage}. No judgement — just friendship! 💜
                 </p>
                 <div className="welcome-suggestions">
-                  {getSuggestions(companionName).map((s, i) => (
+                  {getSuggestions(companionName, targetLanguage).map((s, i) => (
                     <button
                       key={i}
                       className="suggestion-chip"

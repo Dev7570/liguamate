@@ -17,6 +17,24 @@ const GOALS = [
   { value: 'academic', label: '🎓 Academic English' },
 ];
 
+const LANGUAGES = [
+  { value: 'English',    flag: '🇬🇧', label: 'English' },
+  { value: 'Spanish',    flag: '🇪🇸', label: 'Spanish' },
+  { value: 'French',     flag: '🇫🇷', label: 'French' },
+  { value: 'German',     flag: '🇩🇪', label: 'German' },
+  { value: 'Italian',    flag: '🇮🇹', label: 'Italian' },
+  { value: 'Japanese',   flag: '🇯🇵', label: 'Japanese' },
+  { value: 'Mandarin',   flag: '🇨🇳', label: 'Mandarin' },
+  { value: 'Portuguese', flag: '🇧🇷', label: 'Portuguese' },
+  { value: 'Russian',    flag: '🇷🇺', label: 'Russian' },
+  { value: 'Arabic',     flag: '🇸🇦', label: 'Arabic' },
+  { value: 'Hindi',      flag: '🇮🇳', label: 'Hindi' },
+  { value: 'Korean',     flag: '🇰🇷', label: 'Korean' },
+  { value: 'Dutch',      flag: '🇳🇱', label: 'Dutch' },
+  { value: 'Swedish',    flag: '🇸🇪', label: 'Swedish' },
+  { value: 'Turkish',    flag: '🇹🇷', label: 'Turkish' },
+];
+
 export default function SignupPage() {
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
@@ -25,22 +43,25 @@ export default function SignupPage() {
   const [level, setLevel] = useState('beginner');
   const [goal, setGoal] = useState('casual_fluency');
   const [companion, setCompanion] = useState('mira');
+  const [targetLanguage, setTargetLanguage] = useState('English');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { signup } = useAuth();
   const navigate = useNavigate();
 
+  const totalSteps = 3;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (step === 1) {
-      setStep(2);
+    if (step < totalSteps) {
+      setStep(step + 1);
       return;
     }
 
     setError('');
     setLoading(true);
     try {
-      await signup({ name, email, password, english_level: level, goal, companion });
+      await signup({ name, email, password, english_level: level, goal, companion, target_language: targetLanguage });
       navigate('/chat');
     } catch (err) {
       setError(err.message || 'Failed to create account');
@@ -62,13 +83,27 @@ export default function SignupPage() {
               <span className="auth-logo-text">LinguaMate</span>
             </div>
             <h1 className="auth-title">
-              {step === 1 ? 'Join the family!' : 'Tell us about you'}
+              {step === 1 ? 'Join the family!' : step === 2 ? 'Pick your language' : 'Tell us about you'}
             </h1>
             <p className="auth-subtitle">
               {step === 1
                 ? 'Create your account to get started'
+                : step === 2
+                ? 'Which language do you want to learn?'
                 : 'So your AI companion can personalize your experience'}
             </p>
+            {/* Step indicator */}
+            <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', marginTop: '12px' }}>
+              {[1, 2, 3].map(s => (
+                <div key={s} style={{
+                  width: s === step ? '24px' : '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: s <= step ? 'var(--primary)' : 'var(--border)',
+                  transition: 'all 0.3s ease',
+                }} />
+              ))}
+            </div>
           </div>
 
           {error && <div className="auth-error">{error}</div>}
@@ -121,10 +156,51 @@ export default function SignupPage() {
                   Continue →
                 </button>
               </>
+            ) : step === 2 ? (
+              <>
+                <div className="input-group">
+                  <label className="input-label">Choose a Language to Learn</label>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '8px',
+                    maxHeight: '320px',
+                    overflowY: 'auto',
+                    paddingRight: '4px',
+                  }}>
+                    {LANGUAGES.map((lang) => (
+                      <button
+                        key={lang.value}
+                        type="button"
+                        id={`lang-${lang.value.toLowerCase()}`}
+                        className={`level-option ${targetLanguage === lang.value ? 'active' : ''}`}
+                        onClick={() => setTargetLanguage(lang.value)}
+                        style={{ flexDirection: 'column', gap: '4px', padding: '10px 4px', fontSize: '0.8rem' }}
+                      >
+                        <span style={{ fontSize: '1.4rem' }}>{lang.flag}</span>
+                        {lang.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-lg"
+                    onClick={() => setStep(1)}
+                  >
+                    ← Back
+                  </button>
+                  <button type="submit" className="btn btn-primary btn-lg" style={{ flex: 1 }}>
+                    Continue →
+                  </button>
+                </div>
+              </>
             ) : (
               <>
                 <div className="input-group">
-                  <label className="input-label">Your English Level</label>
+                  <label className="input-label">Your {targetLanguage} Level</label>
                   <div className="level-selector">
                     {LEVELS.map((l) => (
                       <button
@@ -182,7 +258,7 @@ export default function SignupPage() {
                   <button
                     type="button"
                     className="btn btn-secondary btn-lg"
-                    onClick={() => setStep(1)}
+                    onClick={() => setStep(2)}
                   >
                     ← Back
                   </button>

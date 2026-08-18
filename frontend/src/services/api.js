@@ -43,6 +43,10 @@ class ApiService {
       throw new Error(error.detail || 'Request failed');
     }
 
+    if (response.status === 204) {
+      return null;
+    }
+
     return response.json();
   }
 
@@ -290,6 +294,81 @@ class ApiService {
   async getAchievements() {
     return this.request('/activities/achievements');
   }
+
+  // ── Pronunciation ──────────────────────────────────────────
+  async getPronunciationWords(level = 'beginner') {
+    return this.request(`/pronunciation/words?level=${level}`);
+  }
+
+  async evaluatePronunciation(audioBlob, target, level = 'beginner') {
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'pronunciation.webm');
+    formData.append('target', target);
+    formData.append('level', level);
+    const response = await fetch(`${API_BASE}/pronunciation/evaluate`, {
+      method: 'POST',
+      headers: { ...(this.token && { Authorization: `Bearer ${this.token}` }) },
+      body: formData,
+    });
+    if (!response.ok) { const e = await response.json().catch(()=>({detail:'Failed'})); throw new Error(e.detail); }
+    return response.json();
+  }
+
+  // ── Flashcards ─────────────────────────────────────────────
+  async getFlashcardDecks() { return this.request('/flashcards/decks'); }
+
+  async createFlashcardDeck(data) {
+    return this.request('/flashcards/decks', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  async deleteFlashcardDeck(id) {
+    return this.request(`/flashcards/decks/${id}`, { method: 'DELETE' });
+  }
+
+  async getFlashcardCards(deckId) { return this.request(`/flashcards/decks/${deckId}/cards`); }
+
+  async addFlashcard(deckId, data) {
+    return this.request(`/flashcards/decks/${deckId}/cards`, { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  async deleteFlashcard(cardId) {
+    return this.request(`/flashcards/cards/${cardId}`, { method: 'DELETE' });
+  }
+
+  async reviewFlashcard(cardId, quality) {
+    return this.request(`/flashcards/cards/${cardId}/review`, { method: 'POST', body: JSON.stringify({ quality }) });
+  }
+
+  async importVocabAsFlashcards(data) {
+    return this.request('/flashcards/decks/import-vocab', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  // ── Language Exchange ──────────────────────────────────────
+  async joinExchange() { return this.request('/exchange/join', { method: 'POST' }); }
+  async getExchangeStatus() { return this.request('/exchange/status'); }
+  async leaveExchange() { return this.request('/exchange/leave', { method: 'DELETE' }); }
+
+  // ── Speaking Tests ─────────────────────────────────────────
+  async getTestPrompts(testType = 'ielts', part = 'part1') {
+    return this.request(`/tests/prompts?test_type=${testType}&part=${part}`);
+  }
+
+  async evaluateTest(audioBlob, testType, part, promptUsed) {
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'test.webm');
+    formData.append('test_type', testType);
+    formData.append('part', part);
+    formData.append('prompt_used', promptUsed);
+    const response = await fetch(`${API_BASE}/tests/evaluate`, {
+      method: 'POST',
+      headers: { ...(this.token && { Authorization: `Bearer ${this.token}` }) },
+      body: formData,
+    });
+    if (!response.ok) { const e = await response.json().catch(()=>({detail:'Evaluation failed'})); throw new Error(e.detail); }
+    return response.json();
+  }
+
+  async getTestHistory() { return this.request('/tests/history'); }
 }
 
 const api = new ApiService();

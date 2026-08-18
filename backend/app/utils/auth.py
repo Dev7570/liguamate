@@ -62,3 +62,12 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
     return user
+
+
+def verify_token(token: str) -> str | None:
+    """Decode a JWT token and return the user_id string, or None if invalid."""
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        return payload.get("sub")
+    except JWTError:
+        return None

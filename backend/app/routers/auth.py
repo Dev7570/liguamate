@@ -31,6 +31,7 @@ async def signup(request: SignupRequest, db: AsyncSession = Depends(get_db)):
         english_level=request.english_level,
         goal=request.goal,
         companion=request.companion,
+        target_language=request.target_language,
     )
     db.add(user)
     await db.commit()
@@ -76,6 +77,7 @@ async def get_profile(current_user: User = Depends(get_current_user)):
         english_level=current_user.english_level,
         goal=current_user.goal,
         companion=current_user.companion,
+        target_language=getattr(current_user, 'target_language', 'English'),
         avatar_emoji=current_user.avatar_emoji,
         created_at=str(current_user.created_at),
     )
@@ -93,6 +95,8 @@ async def update_profile(
         current_user.goal = request.goal
     if request.companion is not None:
         current_user.companion = request.companion
+    if request.target_language is not None:
+        current_user.target_language = request.target_language
         
     await db.commit()
     
@@ -103,6 +107,7 @@ async def update_profile(
         english_level=current_user.english_level,
         goal=current_user.goal,
         companion=current_user.companion,
+        target_language=getattr(current_user, 'target_language', 'English'),
         avatar_emoji=current_user.avatar_emoji,
         created_at=str(current_user.created_at),
     )

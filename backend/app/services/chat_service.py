@@ -106,6 +106,7 @@ async def process_message(
         memories=memories,
         recent_turns=recent_turns,
         task_context=task_context,
+        target_language=getattr(user, 'target_language', 'English'),
     )
 
     # ── Step 6: Call the LLM ─────────────────────────────────────────────────
@@ -204,14 +205,14 @@ async def end_conversation(
 
 async def delete_conversation(
     db: AsyncSession,
-    conversation_id: uuid.UUID,
-    user_id: uuid.UUID,
+    conversation_id: str,
+    user_id: str,
 ) -> bool:
     """Delete a conversation and all its messages."""
     result = await db.execute(
         select(Conversation).where(
-            Conversation.id == conversation_id,
-            Conversation.user_id == user_id,
+            Conversation.id == str(conversation_id),
+            Conversation.user_id == str(user_id),
         )
     )
     conversation = result.scalar_one_or_none()
@@ -341,13 +342,18 @@ async def process_message_stream(
         memories=memories,
         recent_turns=recent_turns,
         task_context=task_context,
+        target_language=getattr(user, 'target_language', 'English'),
     )
 
     # ── Step 6: Stream LLM reply ─────────────────────────────────────────────
     full_reply = ""
     learning_signals = LearningSignals()
 
-    async for event in generate_reply_stream(system_prompt, user_message):
+    async for event in generate_reply_stream(
+        system_prompt,
+        user_message,
+        target_language=getattr(user, 'target_language', 'English'),
+    ):
         if event["type"] == "token":
             yield event  # Forward token to client
 
