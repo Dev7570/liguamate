@@ -15,7 +15,7 @@ from app.routers import pronunciation, flashcards, exchange, tests, insights
 settings = get_settings()
 
 
-async def _ensure_schema(conn):
+ def _ensure_schema(conn):
     """Inspect the live DB and add any columns/tables the ORM models expect."""
     from sqlalchemy import inspect as sa_inspect, text
 
