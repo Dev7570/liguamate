@@ -33,7 +33,7 @@ def get_ai_client_and_model():
             api_key=api_key,
             base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
         )
-        model = "gemini-2.0-flash"
+        model = "gemini-3.5-flash-lite"
         return client, model
     else:
         client = AsyncOpenAI(api_key=settings.openai_api_key or "dummy-key")

@@ -16,6 +16,7 @@ import PronunciationPage from './pages/PronunciationPage';
 import FlashcardsPage from './pages/FlashcardsPage';
 import ExchangePage from './pages/ExchangePage';
 import TestsPage from './pages/TestsPage';
+import InsightsPage from './pages/InsightsPage';
 import './index.css';
 
 function ProtectedRoute({ children }) {
@@ -108,6 +109,7 @@ function AppRoutes() {
       <Route path="/flashcards" element={<ProtectedRoute><FlashcardsPage /></ProtectedRoute>} />
       <Route path="/exchange" element={<ProtectedRoute><ExchangePage /></ProtectedRoute>} />
       <Route path="/tests" element={<ProtectedRoute><TestsPage /></ProtectedRoute>} />
+      <Route path="/insights" element={<ProtectedRoute><InsightsPage /></ProtectedRoute>} />
 
       {/* Default */}
       <Route path="*" element={<Navigate to="/chat" replace />} />

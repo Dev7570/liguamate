@@ -71,6 +71,9 @@ export default function DashboardPage() {
             <button className="btn btn-secondary" onClick={() => navigate('/activities')}>
               🎮 Activities
             </button>
+            <button className="btn btn-secondary" onClick={() => navigate('/insights')}>
+              📈 Insights
+            </button>
             <button className="btn" style={{ background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }} onClick={() => { logout(); navigate('/'); }}>
               🚪 Logout
             </button>
@@ -225,6 +228,10 @@ export default function DashboardPage() {
         <button className="nav-item active" onClick={() => navigate('/dashboard')}>
           <span className="nav-icon">📊</span>
           Progress
+        </button>
+        <button className="nav-item" onClick={() => navigate('/insights')}>
+          <span className="nav-icon">📈</span>
+          Insights
         </button>
       </nav>
     </div>

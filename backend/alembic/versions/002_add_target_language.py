@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic
 revision = '002_add_target_language'
-down_revision = '001_initial_schema'
+down_revision = '001_initial'
 branch_labels = None
 depends_on = None
 

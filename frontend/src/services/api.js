@@ -369,6 +369,15 @@ class ApiService {
   }
 
   async getTestHistory() { return this.request('/tests/history'); }
+
+  // ── Insights ──────────────────────────────────────────────
+  async getLiveInsights(conversationId) {
+    return this.request(`/insights/live/${conversationId}`);
+  }
+
+  async getHistoricalInsights() {
+    return this.request('/insights/history');
+  }
 }
 
 const api = new ApiService();

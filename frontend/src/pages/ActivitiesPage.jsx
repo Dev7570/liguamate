@@ -50,7 +50,7 @@ export default function ActivitiesPage() {
       await loadQuiz();
     } catch (err) {
       console.error('Failed to load activity data:', err);
-    } fontFinally: {
+    } finally {
       setLoading(false);
     }
   };

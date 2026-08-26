@@ -530,6 +530,9 @@ export default function ChatPage() {
             <button className="btn btn-ghost" style={{ flex: 1, fontSize: '0.8rem' }} onClick={() => navigate('/tests')}>
               📝 Tests
             </button>
+            <button className="btn btn-ghost" style={{ flex: 1, fontSize: '0.8rem' }} onClick={() => navigate('/insights')}>
+              📈 Insights
+            </button>
           </div>
           <button
             className="btn btn-ghost w-full mt-sm"
@@ -708,6 +711,13 @@ export default function ChatPage() {
               title="Dashboard"
             >
               📊
+            </button>
+            <button
+              className="btn btn-ghost btn-icon"
+              onClick={() => navigate('/insights')}
+              title="Insights Analytics"
+            >
+              📈
             </button>
           </div>
         </header>

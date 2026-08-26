@@ -8,12 +8,17 @@ settings = get_settings()
 
 from sqlalchemy import event
 
-is_sqlite = settings.database_url.startswith("sqlite")
+# Auto-fix: convert sync sqlite URL to async aiosqlite if needed
+db_url = settings.database_url
+if db_url.startswith("sqlite:///") and "aiosqlite" not in db_url:
+    db_url = db_url.replace("sqlite:///", "sqlite+aiosqlite:///", 1)
+
+is_sqlite = db_url.startswith("sqlite")
 
 connect_args = {"check_same_thread": False, "timeout": 30.0} if is_sqlite else {}
 
 engine = create_async_engine(
-    settings.database_url,
+    db_url,
     echo=settings.debug,
     connect_args=connect_args,
 )

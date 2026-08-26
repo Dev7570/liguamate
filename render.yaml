@@ -9,5 +9,13 @@ services:
         value: 3.11.0
       - key: GROQ_API_KEY
         sync: false
+      - key: GEMINI_API_KEY
+        sync: false
       - key: DATABASE_URL
-        value: sqlite:///./linguamate.db
+        value: sqlite+aiosqlite:///./linguamate.db
+      - key: FRONTEND_URL
+        value: https://liguamate.vercel.app
+      - key: SECRET_KEY
+        sync: false
+      - key: DEBUG
+        value: "false"
