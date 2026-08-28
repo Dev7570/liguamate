@@ -1,5 +1,6 @@
 /**
  * Exchange Page — Social Language Exchange with real-time WebSocket chat
+ * Auto-matches with AI partner if no human found within 10 seconds
  */
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -10,23 +11,28 @@ import '../styles/exchange.css';
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const WS_BASE = API_BASE.replace(/^http/, 'ws');
 
+const AI_FALLBACK_SECONDS = 10;
+
 export default function ExchangePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [status, setStatus] = useState('idle'); // 'idle'|'waiting'|'matched'|'chatting'|'ended'
   const [sessionId, setSessionId] = useState(null);
   const [partner, setPartner] = useState(null);
+  const [isAi, setIsAi] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [sessionTime, setSessionTime] = useState(0);
   const [dots, setDots] = useState(1);
+  const [waitTime, setWaitTime] = useState(0);
   const wsRef = useRef(null);
   const timerRef = useRef(null);
   const dotsRef = useRef(null);
   const msgEndRef = useRef(null);
   const typingTimerRef = useRef(null);
   const pollRef = useRef(null);
+  const waitTimerRef = useRef(null);
 
   const language = user?.target_language || 'English';
   const token = localStorage.getItem('linguamate_token');
@@ -36,6 +42,7 @@ export default function ExchangePage() {
       clearInterval(timerRef.current);
       clearInterval(dotsRef.current);
       clearInterval(pollRef.current);
+      clearInterval(waitTimerRef.current);
       wsRef.current?.close();
     };
   }, []);
@@ -46,20 +53,26 @@ export default function ExchangePage() {
 
   const joinPool = async () => {
     setStatus('waiting');
+    setWaitTime(0);
     dotsRef.current = setInterval(() => setDots(d => d >= 3 ? 1 : d+1), 500);
+    waitTimerRef.current = setInterval(() => setWaitTime(t => t+1), 1000);
+
     try {
       const data = await api.joinExchange();
       if (data.status === 'matched') {
-        await connectToSession(data.session_id);
+        clearInterval(waitTimerRef.current);
+        clearInterval(dotsRef.current);
+        await connectToSession(data.session_id, data.partner, data.is_ai);
       } else {
-        // Poll for match
+        // Poll for match, with AI fallback after timeout
         pollRef.current = setInterval(async () => {
           try {
             const s = await api.getExchangeStatus();
             if (s.status === 'matched') {
               clearInterval(pollRef.current);
               clearInterval(dotsRef.current);
-              await connectToSession(s.session_id, s.partner);
+              clearInterval(waitTimerRef.current);
+              await connectToSession(s.session_id, s.partner, s.is_ai);
             }
           } catch {}
         }, 2000);
@@ -67,12 +80,36 @@ export default function ExchangePage() {
     } catch (e) { setStatus('idle'); alert(e.message||'Failed to join pool'); }
   };
 
-  const connectToSession = async (sid, partnerInfo) => {
+  // Auto-fallback to AI after timeout
+  useEffect(() => {
+    if (status === 'waiting' && waitTime >= AI_FALLBACK_SECONDS) {
+      matchWithAi();
+    }
+  }, [waitTime, status]);
+
+  const matchWithAi = async () => {
+    clearInterval(pollRef.current);
+    clearInterval(dotsRef.current);
+    clearInterval(waitTimerRef.current);
+    try {
+      const data = await api.joinAiExchange();
+      if (data.status === 'matched') {
+        await connectToSession(data.session_id, data.partner, true);
+      }
+    } catch (e) {
+      setStatus('idle');
+    }
+  };
+
+  const connectToSession = async (sid, partnerInfo, aiSession = false) => {
     setSessionId(sid);
+    setIsAi(!!aiSession);
     const s = partnerInfo || (await api.getExchangeStatus());
-    setPartner(s.partner || s);
+    const p = s.partner || s;
+    setPartner(p);
     setStatus('chatting');
-    setMessages([{ type:'system', content:`You matched with ${(s.partner||s).name||'a partner'}! Start chatting in ${language}. 🌟` }]);
+    const partnerLabel = aiSession ? `${p.name || 'AI Partner'} (AI)` : (p.name || 'a partner');
+    setMessages([{ type:'system', content:`You matched with ${partnerLabel}! Start chatting in ${language}. 🌟` }]);
     timerRef.current = setInterval(() => setSessionTime(t => t+1), 1000);
     const ws = new WebSocket(`${WS_BASE}/exchange/chat/${sid}?token=${token}`);
     ws.onopen = () => {};
@@ -107,6 +144,7 @@ export default function ExchangePage() {
   const leaveSession = async () => {
     clearInterval(timerRef.current);
     clearInterval(pollRef.current);
+    clearInterval(waitTimerRef.current);
     wsRef.current?.close();
     try { await api.leaveExchange(); } catch {}
     setStatus('ended');
@@ -131,13 +169,16 @@ export default function ExchangePage() {
           <div className="ex-lobby">
             <div className="ex-globe-anim">🌐</div>
             <h2>Find a Language Partner</h2>
-            <p className="ex-lobby-sub">Practice <strong>{language}</strong> with a real person learning the same language.</p>
+            <p className="ex-lobby-sub">Practice <strong>{language}</strong> with a real person or AI partner.</p>
             <div className="ex-info-cards">
-              <div className="ex-info-card">💬<br/>Live text chat with a real learner</div>
+              <div className="ex-info-card">💬<br/>Live text chat</div>
               <div className="ex-info-card">🌍<br/>Matched by language & level</div>
-              <div className="ex-info-card">⏱️<br/>Sessions last 10–15 minutes</div>
+              <div className="ex-info-card">🤖<br/>AI partner if no one's online</div>
             </div>
-            <button className="ex-join-btn" onClick={joinPool} id="find-partner-btn">🔍 Find a Partner</button>
+            <div className="ex-btn-group">
+              <button className="ex-join-btn" onClick={joinPool} id="find-partner-btn">🔍 Find a Partner</button>
+              <button className="ex-ai-btn" onClick={matchWithAi} id="ai-partner-btn">🤖 Practice with AI</button>
+            </div>
           </div>
         )}
 
@@ -152,7 +193,18 @@ export default function ExchangePage() {
             </div>
             <h2>Looking for a partner{'.'.repeat(dots)}</h2>
             <p className="ex-lobby-sub">Searching for someone learning <strong>{language}</strong>...</p>
-            <button className="ex-cancel-btn" onClick={() => { clearInterval(pollRef.current); clearInterval(dotsRef.current); api.leaveExchange().catch(()=>{}); setStatus('idle'); }}>Cancel</button>
+            <div className="ex-wait-info">
+              <div className="ex-wait-timer">{waitTime}s</div>
+              <p className="ex-wait-hint">
+                {waitTime < AI_FALLBACK_SECONDS
+                  ? `AI partner in ${AI_FALLBACK_SECONDS - waitTime}s if no one joins`
+                  : 'Matching with AI partner...'}
+              </p>
+            </div>
+            <div className="ex-btn-group">
+              <button className="ex-ai-btn-sm" onClick={matchWithAi}>🤖 Match with AI now</button>
+              <button className="ex-cancel-btn" onClick={() => { clearInterval(pollRef.current); clearInterval(dotsRef.current); clearInterval(waitTimerRef.current); api.leaveExchange().catch(()=>{}); setStatus('idle'); }}>Cancel</button>
+            </div>
           </div>
         )}
 
@@ -161,9 +213,9 @@ export default function ExchangePage() {
           <div className="ex-chat-layout">
             <div className="ex-chat-header">
               <div className="ex-partner-info">
-                <div className="ex-partner-avatar">👤</div>
+                <div className="ex-partner-avatar">{isAi ? '🤖' : '👤'}</div>
                 <div>
-                  <div className="ex-partner-name">{partner?.name || 'Partner'}</div>
+                  <div className="ex-partner-name">{partner?.name || 'Partner'}{isAi && <span className="ex-ai-badge">AI</span>}</div>
                   <div className="ex-partner-level">{language} · {partner?.level || 'learner'}</div>
                 </div>
               </div>
@@ -197,7 +249,7 @@ export default function ExchangePage() {
             {status === 'ended' && (
               <div className="ex-ended-bar">
                 <p>Session ended — great practice! 🌟</p>
-                <button className="ex-join-btn" onClick={() => { setStatus('idle'); setMessages([]); setSessionTime(0); }}>Find Another Partner</button>
+                <button className="ex-join-btn" onClick={() => { setStatus('idle'); setMessages([]); setSessionTime(0); setIsAi(false); }}>Find Another Partner</button>
               </div>
             )}
           </div>

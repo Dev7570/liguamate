@@ -345,6 +345,7 @@ class ApiService {
 
   // ── Language Exchange ──────────────────────────────────────
   async joinExchange() { return this.request('/exchange/join', { method: 'POST' }); }
+  async joinAiExchange() { return this.request('/exchange/join/ai', { method: 'POST' }); }
   async getExchangeStatus() { return this.request('/exchange/status'); }
   async leaveExchange() { return this.request('/exchange/leave', { method: 'DELETE' }); }
 
