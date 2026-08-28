@@ -25,7 +25,7 @@ def get_ai_client_and_model():
             api_key=api_key,
             base_url="https://api.groq.com/openai/v1",
         )
-        model = settings.openai_model if settings.openai_model != "gpt-4o" else "llama-3.3-70b-versatile"
+        model = settings.openai_model if settings.openai_model != "gpt-4o" else "llama-3.1-70b-versatile"
         return client, model
     elif settings.gemini_api_key or (settings.openai_api_key and settings.openai_api_key.startswith("AIzaSy")):
         api_key = settings.gemini_api_key or settings.openai_api_key
