@@ -139,35 +139,3 @@ async def health_check():
     return {"status": "healthy"}
 
 
-# ─── Temporary Debug Endpoint (remove after fixing) ─────────────────────────
-@app.get("/debug/schema", tags=["Debug"])
-async def debug_schema():
-    """Temporary endpoint to diagnose DB schema issues on production."""
-    from sqlalchemy import inspect as sa_inspect, text
-    from app.database import engine as db_engine
-
-    result = {"startup_info": _startup_info, "current_schema": {}, "test_query": None}
-    try:
-        async with db_engine.connect() as conn:
-            def inspect_db(sync_conn):
-                inspector = sa_inspect(sync_conn)
-                tables = inspector.get_table_names()
-                schema = {}
-                for t in tables:
-                    cols = inspector.get_columns(t)
-                    schema[t] = [c["name"] for c in cols]
-                return schema
-            result["current_schema"] = await conn.run_sync(inspect_db)
-    except Exception as e:
-        result["current_schema"] = f"Error: {e}"
-
-    # Try a simple user query to reproduce the exact error
-    try:
-        async with db_engine.connect() as conn:
-            row = await conn.execute(text("SELECT * FROM users LIMIT 1"))
-            cols = list(row.keys()) if row else []
-            result["test_query"] = {"status": "ok", "columns_returned": cols}
-    except Exception as e:
-        result["test_query"] = {"status": "error", "error": str(e), "traceback": traceback.format_exc()}
-
-    return result
