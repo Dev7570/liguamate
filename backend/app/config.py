@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     groq_api_key: str = ""
     gemini_api_key: str = ""
-    openai_model: str = "llama-3.1-70b-versatile"  # Default model for Groq
+    openai_model: str = "llama3-70b-8192"  # Default model for Groq
 
     # App
     app_name: str = "LinguaMate AI"
