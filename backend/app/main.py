@@ -21,7 +21,7 @@ settings = get_settings()
 _startup_info = {"status": "pending", "errors": [], "tables": [], "columns": {}}
 
 
- def _ensure_schema(conn):
+def _ensure_schema(conn):
     """Inspect the live DB and add any columns/tables the ORM models expect."""
     from sqlalchemy import inspect as sa_inspect, text
 
