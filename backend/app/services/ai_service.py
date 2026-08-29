@@ -26,8 +26,8 @@ def get_ai_client_and_model():
             base_url="https://api.groq.com/openai/v1",
         )
         model = settings.openai_model
-        if model in ["gpt-4o", "llama-3.3-70b-versatile", "llama-3.1-70b-versatile"]:
-            model = "llama3-8b-8192" # using the 8b model as it is faster and 100% available on all free tiers
+        if "llama" in model.lower() or model == "gpt-4o" or model == "compound":
+            model = "openai/gpt-oss-20b" # Using the new 2026 active Groq model
         return client, model
     elif settings.gemini_api_key or (settings.openai_api_key and settings.openai_api_key.startswith("AIzaSy")):
         api_key = settings.gemini_api_key or settings.openai_api_key
